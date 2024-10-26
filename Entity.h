@@ -90,10 +90,10 @@ public:
     void face_up() { m_animation_indices = m_walking[UP]; }
     void face_down() { m_animation_indices = m_walking[DOWN]; }
 
-    void move_left() { m_is_left = true; face_left(); }
-    void move_right() { m_is_right = true;  face_right(); }
-    void move_up() { m_movement.y = 1.0f;  face_up(); }
-    void move_down() { m_movement.y = -1.0f; face_down(); }
+    void move_left() { m_is_left = true; }
+    void move_right() { m_is_right = true; }
+    void move_up() { m_movement.y = 1.0f; }
+    void move_down() { m_movement.y = -1.0f; }
 
     void const jump() { m_is_jumping = true; }
 

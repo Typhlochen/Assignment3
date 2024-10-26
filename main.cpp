@@ -35,6 +35,9 @@ struct GameState
 constexpr int WINDOW_WIDTH  = 640 * 2,
           WINDOW_HEIGHT = 480 * 2;
 
+bool win = false;
+bool lose = false;
+
 constexpr float BG_RED     = 0.1922f,
             BG_BLUE    = 0.549f,
             BG_GREEN   = 0.9059f,
@@ -50,9 +53,11 @@ constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
 
 constexpr float MILLISECONDS_IN_SECOND = 1000.0;
 constexpr char SPRITESHEET_FILEPATH[] = "assets/george_0.png";
-constexpr char PLATFORM_FILEPATH[]    = "assets/platformPack_tile027.png";
-constexpr char WINSCREEN_FILEPATH[]   = "MissionComplete.png",
-               LOSESCREEN_FILEPATH[]  = "MissionFailed.png";
+constexpr char PLATFORM_FILEPATH[]    = "Astroids.png";
+constexpr char WINSCREEN_FILEPATH[] = "MissionComplete.png",
+LOSESCREEN_FILEPATH[] = "MissionFailed.png",
+GOALPLATFORM_FILEPATH[] = "GoalPlatform.png",
+ROCKET_FILEPATH[] = "Rocket.png";
 
 constexpr int NUMBER_OF_TEXTURES = 1;
 constexpr GLint LEVEL_OF_DETAIL  = 0;
@@ -165,6 +170,7 @@ void initialise()
 
     // ––––– PLATFORMS ––––– //
     GLuint platform_texture_id = load_texture(PLATFORM_FILEPATH);
+    GLuint win_platform_texture_id = load_texture(GOALPLATFORM_FILEPATH);
 
     g_state.platforms = new Entity[PLATFORM_COUNT];
 
@@ -180,41 +186,52 @@ void initialise()
     }
 
     g_state.platforms[7].set_entity_type(WIN_PLATFORM);
+    g_state.platforms[7].set_texture_id(win_platform_texture_id);
+    g_state.platforms[7].set_scale(glm::vec3(1.40f, 1.0f, 0.0f));
+    g_state.platforms[7].set_position(glm::vec3(1.9f, -2.3f, 0.0f));
+    g_state.platforms[7].set_height(0.2);
+    g_state.platforms[7].update(0.0f, NULL, NULL, 0);
     g_state.platforms[5].set_entity_type(START_PLATFORM);
 
 
     // ––––– PLAYER (GEORGE) ––––– //
-    GLuint player_texture_id = load_texture(SPRITESHEET_FILEPATH);
+    GLuint player_texture_id = load_texture(ROCKET_FILEPATH);
 
-    int player_walking_animation[4][4] =
-    {
-        { 1, 5, 9, 13 },  // for George to move to the left,
-        { 3, 7, 11, 15 }, // for George to move to the right,
-        { 2, 6, 10, 14 }, // for George to move upwards,
-        { 0, 4, 8, 12 }   // for George to move downwards
-    };
+    //int player_walking_animation[4][4] =
+    //{
+    //    { 1, 5, 9, 13 },  // for George to move to the left,
+    //    { 3, 7, 11, 15 }, // for George to move to the right,
+    //    { 2, 6, 10, 14 }, // for George to move upwards,
+    //    { 0, 4, 8, 12 }   // for George to move downwards
+    //};
 
     glm::vec3 acceleration = glm::vec3(0.0f,-4.905f, 0.0f);
 
-    g_state.player = new Entity(
-        player_texture_id,         // texture id
-        5.0f,                      // speed
-        acceleration,              // acceleration
-        3.5f,                      // jumping power
-        player_walking_animation,  // animation index sets
-        0.0f,                      // animation time
-        4,                         // animation frame amount
-        0,                         // current animation index
-        4,                         // animation column amount
-        4,                         // animation row amount
-        1.0f,                      // width
-        1.0f,                       // height
-        PLAYER
-    );
+    //g_state.player = new Entity(
+    //    player_texture_id,         // texture id
+    //    5.0f,                      // speed
+    //    acceleration,              // acceleration
+    //    3.5f,                      // jumping power
+    //    player_walking_animation,  // animation index sets
+    //    0.0f,                      // animation time
+    //    4,                         // animation frame amount
+    //    0,                         // current animation index
+    //    4,                         // animation column amount
+    //    4,                         // animation row amount
+    //    1.0f,                      // width
+    //    1.0f,                       // height
+    //    PLAYER
+    //);
 
+    g_state.player = new Entity;
+    g_state.player->set_texture_id(player_texture_id);
+    g_state.player->set_speed(5.0f);
+    g_state.player->set_acceleration(acceleration);
+    g_state.player->set_jumping_power(3.5f);
+    g_state.player->set_height(1.0f);
+    g_state.player->set_width(1.0f);
+    g_state.player->set_entity_type(PLAYER);
 
-    // Jumping
-    g_state.player->set_jumping_power(3.0f);
 
     // ----- BACKGROUND ----- //
     GLuint win_screen_texture_id = load_texture(WINSCREEN_FILEPATH);
@@ -236,7 +253,7 @@ void initialise()
         g_state.backgrounds[i].set_height(7.0f);
         g_state.backgrounds[i].set_scale(glm::vec3(10.0f, 7.0f, 0.0f));
         g_state.backgrounds[i].set_entity_type(BACKGROUND);
-        g_state.platforms[i].update(0.0f, NULL, NULL, 0);
+        g_state.backgrounds[i].update(0.0f, NULL, NULL, 0);
     }
 
     // ––––– GENERAL ––––– //
@@ -265,13 +282,13 @@ void process_input()
                         g_game_is_running = false;
                         break;
 
-                    case SDLK_h:
-                        // Stop music
-                        Mix_HaltMusic();
-                        break;
+                    //case SDLK_h:
+                    //    // Stop music
+                    //    Mix_HaltMusic();
+                    //    break;
 
-                    case SDLK_p:
-                        Mix_PlayMusic(g_music, -1);
+                    //case SDLK_p:
+                    //    Mix_PlayMusic(g_music, -1);
 
                     default:
                         break;
@@ -295,7 +312,6 @@ void process_input()
 
     if (key_state[SDL_SCANCODE_SPACE]) {
         g_state.player->jump();
-        Mix_PlayChannel(NEXT_CHNL, g_jump_sfx, 0);
     }
 
     if (glm::length(g_state.player->get_movement()) > 1.0f)
@@ -339,7 +355,7 @@ void render()
         {
             if (g_state.platforms[i].get_win() == true)
             {
-                g_state.backgrounds[0].render(&g_program);
+                win = true;
                 g_state.player->deactivate();
             }
         }
@@ -347,10 +363,17 @@ void render()
         {
             if (g_state.platforms[i].get_win() == true)
             {
-                g_state.backgrounds[1].render(&g_program);
+                lose = true;
                 g_state.player->deactivate();
             }
         }
+    }
+    
+    if (win) {
+        g_state.backgrounds[0].render(&g_program);
+    }
+    else if (lose) {
+        g_state.backgrounds[1].render(&g_program);
     }
 
 
