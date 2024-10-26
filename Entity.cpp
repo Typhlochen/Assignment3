@@ -155,8 +155,14 @@ bool const Entity::check_collision(Entity* other) const
         if (x_distance < 0.0f && y_distance < 0.0f)
         {
             other->set_win(true);
+        };
+    }
+    else if (other->get_entity_type() == PLATFORM)
+    {
+        if (x_distance < 0.0f && y_distance < 0.0f)
+        {
+            other->set_win(true);
         }
-        return false;
     }
 
     return x_distance < 0.0f && y_distance < 0.0f;
@@ -232,6 +238,8 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
 
     if (m_entity_type == ENEMY) ai_activate(player);
 
+    
+
     if (m_animation_indices != NULL)
     {
         if (glm::length(m_movement) != 0)
@@ -302,6 +310,7 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
      
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
+    m_model_matrix = glm::scale(m_model_matrix, m_scale);
 }
 
 

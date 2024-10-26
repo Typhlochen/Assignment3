@@ -4,6 +4,7 @@
 #define GL_GLEXT_PROTOTYPES 1
 #define FIXED_TIMESTEP 0.0166666f
 #define PLATFORM_COUNT 10
+#define BACKGROUND_COUNT = 2
 
 #ifdef _WINDOWS
 #include <GL/glew.h>
@@ -27,6 +28,7 @@ struct GameState
 {
     Entity* player;
     Entity* platforms;
+    Entity* backgrounds;
 };
 
 // ––––– CONSTANTS ––––– //
@@ -67,7 +69,7 @@ constexpr int PLAY_ONCE = 0,    // play once, loop never
           NEXT_CHNL = -1,   // next available channel
           ALL_SFX_CHNL = -1;
 
-int random_platform = rand() % PLATFORM_COUNT;
+//int random_platform = rand() % PLATFORM_COUNT;
 
 Mix_Music *g_music;
 Mix_Chunk *g_jump_sfx;
@@ -175,10 +177,10 @@ void initialise()
         g_state.platforms[i].set_height(1.0f);
         g_state.platforms[i].set_entity_type(PLATFORM);
         g_state.platforms[i].update(0.0f, NULL, NULL, 0);
-        if (i == random_platform) {
-            g_state.platforms[i].set_entity_type(TRAP);
-        }
     }
+
+    g_state.platforms[7].set_entity_type(WIN_PLATFORM);
+    g_state.platforms[5].set_entity_type(START_PLATFORM);
 
 
     // ––––– PLAYER (GEORGE) ––––– //
@@ -217,6 +219,25 @@ void initialise()
     // ----- BACKGROUND ----- //
     GLuint win_screen_texture_id = load_texture(WINSCREEN_FILEPATH);
     GLuint lose_screen_texture_id = load_texture(LOSESCREEN_FILEPATH);
+
+    g_state.backgrounds = new Entity[2];
+
+    for (int i = 0; i < 2; i++) {
+        if (i == 0)
+        {
+            g_state.backgrounds[i].set_texture_id(win_screen_texture_id);
+        }
+        else
+        {
+            g_state.backgrounds[i].set_texture_id(lose_screen_texture_id);
+        }
+        g_state.backgrounds[i].set_position(glm::vec3(0.0f, 0.0f, 0.0f));
+        g_state.backgrounds[i].set_width(10.0f);
+        g_state.backgrounds[i].set_height(7.0f);
+        g_state.backgrounds[i].set_scale(glm::vec3(10.0f, 7.0f, 0.0f));
+        g_state.backgrounds[i].set_entity_type(BACKGROUND);
+        g_state.platforms[i].update(0.0f, NULL, NULL, 0);
+    }
 
     // ––––– GENERAL ––––– //
     glEnable(GL_BLEND);
@@ -312,7 +333,26 @@ void render()
 
     g_state.player->render(&g_program);
 
-    for (int i = 0; i < PLATFORM_COUNT; i++) g_state.platforms[i].render(&g_program);
+    for (int i = 0; i < PLATFORM_COUNT; i++) {
+        g_state.platforms[i].render(&g_program);
+        if (g_state.platforms[i].get_entity_type() == WIN_PLATFORM)
+        {
+            if (g_state.platforms[i].get_win() == true)
+            {
+                g_state.backgrounds[0].render(&g_program);
+                g_state.player->deactivate();
+            }
+        }
+        else if (g_state.platforms[i].get_entity_type() == PLATFORM)
+        {
+            if (g_state.platforms[i].get_win() == true)
+            {
+                g_state.backgrounds[1].render(&g_program);
+                g_state.player->deactivate();
+            }
+        }
+    }
+
 
     SDL_GL_SwapWindow(g_display_window);
 }
