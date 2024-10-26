@@ -52,12 +52,12 @@ constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
            F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
 
 constexpr float MILLISECONDS_IN_SECOND = 1000.0;
-constexpr char SPRITESHEET_FILEPATH[] = "assets/george_0.png";
 constexpr char PLATFORM_FILEPATH[]    = "Astroids.png";
 constexpr char WINSCREEN_FILEPATH[] = "MissionComplete.png",
 LOSESCREEN_FILEPATH[] = "MissionFailed.png",
 GOALPLATFORM_FILEPATH[] = "GoalPlatform.png",
-ROCKET_FILEPATH[] = "Rocket.png";
+ROCKET_FILEPATH[] = "Rocket.png",
+LAUNCHPAD_FILEPATH[] = "LaunchPad.png";
 
 constexpr int NUMBER_OF_TEXTURES = 1;
 constexpr GLint LEVEL_OF_DETAIL  = 0;
@@ -171,6 +171,7 @@ void initialise()
     // ––––– PLATFORMS ––––– //
     GLuint platform_texture_id = load_texture(PLATFORM_FILEPATH);
     GLuint win_platform_texture_id = load_texture(GOALPLATFORM_FILEPATH);
+    GLuint start_platform_texture_id = load_texture(LAUNCHPAD_FILEPATH);
 
     g_state.platforms = new Entity[PLATFORM_COUNT];
 
@@ -191,40 +192,18 @@ void initialise()
     g_state.platforms[7].set_position(glm::vec3(1.9f, -2.3f, 0.0f));
     g_state.platforms[7].set_height(0.2);
     g_state.platforms[7].update(0.0f, NULL, NULL, 0);
-    g_state.platforms[5].set_entity_type(START_PLATFORM);
+    g_state.platforms[1].set_entity_type(START_PLATFORM);
+    g_state.platforms[1].set_texture_id(start_platform_texture_id);
 
 
     // ––––– PLAYER (GEORGE) ––––– //
     GLuint player_texture_id = load_texture(ROCKET_FILEPATH);
 
-    //int player_walking_animation[4][4] =
-    //{
-    //    { 1, 5, 9, 13 },  // for George to move to the left,
-    //    { 3, 7, 11, 15 }, // for George to move to the right,
-    //    { 2, 6, 10, 14 }, // for George to move upwards,
-    //    { 0, 4, 8, 12 }   // for George to move downwards
-    //};
-
     glm::vec3 acceleration = glm::vec3(0.0f,-4.905f, 0.0f);
-
-    //g_state.player = new Entity(
-    //    player_texture_id,         // texture id
-    //    5.0f,                      // speed
-    //    acceleration,              // acceleration
-    //    3.5f,                      // jumping power
-    //    player_walking_animation,  // animation index sets
-    //    0.0f,                      // animation time
-    //    4,                         // animation frame amount
-    //    0,                         // current animation index
-    //    4,                         // animation column amount
-    //    4,                         // animation row amount
-    //    1.0f,                      // width
-    //    1.0f,                       // height
-    //    PLAYER
-    //);
 
     g_state.player = new Entity;
     g_state.player->set_texture_id(player_texture_id);
+    g_state.player->set_position(glm::vec3(-4.0f, 0.0f, 0.0f));
     g_state.player->set_speed(5.0f);
     g_state.player->set_acceleration(acceleration);
     g_state.player->set_jumping_power(3.5f);
